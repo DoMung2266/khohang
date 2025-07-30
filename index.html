@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Upload sản phẩm lên Dropbox</title>
+  <title>📦 Upload sản phẩm lên Dropbox</title>
   <script src="key.js"></script>
   <script src="main.js" defer></script>
   <style>
@@ -18,7 +18,22 @@
   <h2>📤 Upload sản phẩm lên Dropbox</h2>
 
   <label>Tên sản phẩm:</label>
-  <input type="text" id="name" placeholder="Ví dụ: Bánh tráng me" required />
+  <input type="text" id="name" placeholder="Ví dụ: Khay bộ" required />
+
+  <label>Mã số:</label>
+  <input type="text" id="code" placeholder="Ví dụ: A-101W" required />
+
+  <label>Hãng:</label>
+  <input type="text" id="brand" placeholder="Ví dụ: ASAHI" />
+
+  <label>Quy Cách:</label>
+  <input type="text" id="specs" placeholder="Ví dụ: 120x60x30cm" />
+
+  <label>Loại gỗ:</label>
+  <input type="text" id="woodType" placeholder="Ví dụ: Gỗ Gõ Đỏ" />
+
+  <label>Thông tin khác:</label>
+  <textarea id="extra" placeholder="Chi tiết thêm nếu có..." rows="2"></textarea>
 
   <label>Mô tả sản phẩm:</label>
   <textarea id="description" placeholder="Mô tả sản phẩm..." rows="4" required></textarea>
@@ -27,6 +42,8 @@
   <input type="file" id="image" accept="image/*" required />
 
   <button onclick="uploadToDropbox()">Lưu lên Dropbox</button>
+  
+
 
   <div id="status"></div>
 
