@@ -2,18 +2,72 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📦 Upload sản phẩm lên Dropbox</title>
-  <script src="key.js"></script>
-  <script src="main.js" defer></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 600px; }
-    input, textarea, button { margin: 10px 0; width: 100%; padding: 8px; box-sizing: border-box; }
-    button { background-color: #0061ff; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #0047cc; }
-    #status { margin-top: 20px; white-space: pre-line; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    h2 { text-align: center; margin-bottom: 30px; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, textarea, select, button {
+      width: 100%; padding: 10px; margin-top: 6px;
+      font-size: 16px; border: 1px solid #ccc; border-radius: 4px;
+    }
+    button {
+      margin-top: 15px;
+      background-color: #0078d7; color: white; border: none; cursor: pointer;
+    }
+    button:hover { background-color: #005bb5; }
+    #status, #imageStatus {
+      margin-top: 20px; font-style: italic;
+      color: #555; white-space: pre-line;
+    }
+    #previewImage {
+      max-width: 100%; margin-top: 10px;
+      display: none; border: 1px solid #ccc; border-radius: 6px;
+    }
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      input, textarea, select, button { font-size: 18px; }
+    }
+	.top-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .btn-go {
+      flex: 1;
+      background: #f39c12;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-go:hover {
+      background: #e67e22;
+    }
   </style>
 </head>
 <body>
+
+
+	<div class="top-nav">
+    <button onclick="window.location.href='config.html'" class="btn-go">📋 Cấu Hình </button>
+	<button onclick="window.location.href='list.html'" class="btn-go">✏️ Danh Sách Hàng Mẫu</button>
+    <button onclick="window.location.href='editProducts.html'" class="btn-go">✏️ Chỉnh sửa sản phẩm</button>
+	</div>
 
   <h2>📤 Upload sản phẩm lên Dropbox</h2>
 
@@ -24,28 +78,30 @@
   <input type="text" id="code" placeholder="Ví dụ: A-101W" required />
 
   <label>Hãng:</label>
-  <input type="text" id="brand" placeholder="Ví dụ: ASAHI" />
+  <select id="brand"><option>Đang tải hãng...</option></select>
 
-  <label>Quy Cách:</label>
-  <input type="text" id="specs" placeholder="Ví dụ: 120x60x30cm" />
+  <label>Quy cách:</label>
+  <input type="text" id="specs" placeholder="Ví dụ: 120x60x30mm" />
 
   <label>Loại gỗ:</label>
-  <input type="text" id="woodType" placeholder="Ví dụ: Gỗ Gõ Đỏ" />
+  <input type="text" id="woodType" placeholder="Ví dụ: Beech, Xà cừ, Óc chó..." />
 
   <label>Thông tin khác:</label>
   <textarea id="extra" placeholder="Chi tiết thêm nếu có..." rows="2"></textarea>
 
-  <label>Mô tả sản phẩm:</label>
-  <textarea id="description" placeholder="Mô tả sản phẩm..." rows="4" required></textarea>
-
   <label>Chọn ảnh sản phẩm:</label>
-  <input type="file" id="image" accept="image/*" required />
+  <input type="file" id="imageInput" accept="image/*" required />
+  <img id="previewImage" />
+  <button type="button" onclick="clearImage()">🗑 Xóa ảnh</button>
+  <div id="imageStatus"></div>
 
-  <button onclick="uploadToDropbox()">Lưu lên Dropbox</button>
-  
-
-
+  <button onclick="uploadToDropbox()">💾 Lưu lên Dropbox</button>
   <div id="status"></div>
+
+  <!-- Import script -->
+  <script src="key.js"></script>
+  <script src="imageUtils.js"></script>
+  <script src="main.js"></script>
 
 </body>
 </html>
