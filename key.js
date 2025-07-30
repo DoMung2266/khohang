@@ -1,8 +1,4 @@
-//key.js
-// File cấu hình OAuth 
-const GOOGLE_CONFIG = {
-  client_id: "875883725470-la5ao5l07bat3epei59g3uirgqenedds.apps.googleusercontent.com"
-};
+// Key.js
 
-// Token được gán sau khi đăng nhập
-let accessToken = '';
+const CLIENT_ID = "875883725470-la5ao5l07bat3epei59g3uirgqenedds.apps.googleusercontent.com";
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
