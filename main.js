@@ -1,55 +1,102 @@
+// Tải danh sách hãng từ Dropbox
+async function loadBrands() {
+  const brandSelect = document.getElementById("brand");
+  brandSelect.innerHTML = `<option>⏳ Đang tải hãng...</option>`;
+
+  try {
+    const res = await fetch("https://content.dropboxapi.com/2/files/download", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+        "Dropbox-API-Arg": JSON.stringify({ path: "/hangmau/config.json" })
+      }
+    });
+    const data = await res.json();
+    brandSelect.innerHTML = "";
+    if (Array.isArray(data)) {
+      data.forEach(b => {
+        brandSelect.innerHTML += `<option value="${b}">${b}</option>`;
+      });
+    } else {
+      brandSelect.innerHTML = `<option value="">❌ Dữ liệu hãng không hợp lệ</option>`;
+    }
+  } catch (err) {
+    brandSelect.innerHTML = `<option value="">❌ Không tải được hãng</option>`;
+  }
+}
+
+window.addEventListener("DOMContentLoaded", loadBrands);
+
+// Preview ảnh + resize khi chọn
+document.getElementById("imageInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  const preview = document.getElementById("previewImage");
+  const status = document.getElementById("imageStatus");
+
+  if (file) {
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+    status.textContent = "🔄 Đang xử lý ảnh...";
+    status.style.color = "orange";
+
+    try {
+      await resizeImage(file); // kết quả lưu vào window.fileResized
+      status.textContent = "✅ Ảnh đã được resize.";
+      status.style.color = "green";
+    } catch (err) {
+      status.textContent = "❌ Lỗi khi xử lý ảnh.";
+      status.style.color = "red";
+    }
+  }
+});
+
+// Upload sản phẩm
 async function uploadToDropbox() {
-  const getValue = id => document.getElementById(id).value.trim();
+  const get = id => document.getElementById(id).value.trim();
   const statusDiv = document.getElementById("status");
-  const imageFile = document.getElementById("image").files[0];
 
-  const name = getValue("name");
-  const code = getValue("code");
-  const brand = getValue("brand") || "KhongRiengHang";
-  const specs = getValue("specs");
-  const woodType = getValue("woodType");
-  const extra = getValue("extra");
-  const description = getValue("description");
+  const name = get("name"),
+        code = get("code"),
+        brand = get("brand"),
+        specs = get("specs"),
+        woodType = get("woodType"),
+        extra = get("extra"),
+        imageBlob = window.fileResized;
 
-  if (!name || !code || !description || !imageFile) {
-    statusDiv.innerText = "❌ Vui lòng điền đầy đủ thông tin!";
+  if (!name || !code || !brand || !imageBlob) {
+    statusDiv.textContent = "❌ Vui lòng nhập đầy đủ thông tin và chọn ảnh!";
     return;
   }
 
-  statusDiv.innerText = "🔄 Đang xử lý...";
+  statusDiv.textContent = "🔄 Đang upload sản phẩm...";
 
   const brandSafe = brand.replace(/[^\w\s\-]/gi, "").trim().replace(/\s+/g, "_");
   const imagePath = `/hangmau/images/${brandSafe}/${code}.jpg`;
   const productsPath = `/hangmau/products.json`;
+
   const newProduct = {
-    name, code, brand, specs, woodType, extra, description,
+    name, code, brand, specs, woodType, extra,
     image: imagePath,
     time: new Date().toISOString()
   };
 
   try {
-    // 🖼️ Upload ảnh sản phẩm
+    // Upload ảnh đã resize
     const imageRes = await fetch("https://content.dropboxapi.com/2/files/upload", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${DROPBOX_ACCESS_TOKEN}`,
         "Dropbox-API-Arg": JSON.stringify({
-          path: imagePath,
-          mode: "add",
-          autorename: true,
-          mute: false
+          path: imagePath, mode: "add", autorename: true
         }),
         "Content-Type": "application/octet-stream"
       },
-      body: imageFile
+      body: imageBlob
     });
 
-    if (!imageRes.ok) {
-      const errText = await imageRes.text();
-      throw new Error(`❌ Lỗi upload ảnh: ${imageRes.status} – ${errText}`);
-    }
+    if (!imageRes.ok) throw new Error(`Lỗi khi upload ảnh: ${imageRes.status}`);
 
-    // 📥 Đọc products.json hiện tại (nếu có)
+    // Lấy sản phẩm hiện có
     let products = [];
     try {
       const jsonRes = await fetch("https://content.dropboxapi.com/2/files/download", {
@@ -59,43 +106,34 @@ async function uploadToDropbox() {
           "Dropbox-API-Arg": JSON.stringify({ path: productsPath })
         }
       });
+      if (jsonRes.ok) products = await jsonRes.json();
+    } catch {}
 
-      if (jsonRes.ok) {
-        const existingData = await jsonRes.text();
-        products = JSON.parse(existingData);
-      }
-    } catch (err) {
-      console.warn("📭 products.json chưa tồn tại, sẽ tạo mới.");
-    }
+    products.push(newProduct);
 
-    if (!Array.isArray(products)) products = [];
-
-    products.push(newProduct); // 🆕 Thêm sản phẩm mới
-
-    // 📤 Upload lại products.json
+    // Ghi sản phẩm mới
     const uploadRes = await fetch("https://content.dropboxapi.com/2/files/upload", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${DROPBOX_ACCESS_TOKEN}`,
         "Dropbox-API-Arg": JSON.stringify({
-          path: productsPath,
-          mode: "overwrite",
-          autorename: false,
-          mute: false
+          path: productsPath, mode: "overwrite"
         }),
         "Content-Type": "application/octet-stream"
       },
       body: JSON.stringify(products, null, 2)
     });
 
-    if (!uploadRes.ok) {
-      const errText = await uploadRes.text();
-      throw new Error(`❌ Lỗi ghi products.json: ${uploadRes.status} – ${errText}`);
-    }
+    if (!uploadRes.ok) throw new Error(`Lỗi ghi JSON: ${uploadRes.status}`);
 
-    statusDiv.innerText = `✅ Upload thành công!\n📸 Ảnh: ${imagePath}\n📄 products.json đã được cập nhật.`;
-  } catch (error) {
-    console.error("❌ Lỗi toàn trình:", error);
-    statusDiv.innerText = `⚠️ Đã xảy ra lỗi:\n${error.message}`;
+    statusDiv.textContent = `✅ Upload thành công!\n📸 Ảnh: ${imagePath}\n📄 products.json đã cập nhật.`;
+
+    // Reset form sau khi gửi
+    ["name", "code", "specs", "woodType", "extra"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    clearImage();
+  } catch (err) {
+    statusDiv.textContent = `⚠️ Có lỗi xảy ra: ${err.message}`;
   }
 }
