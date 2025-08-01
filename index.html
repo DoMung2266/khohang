@@ -64,13 +64,25 @@
 
 
 	<div class="top-nav">
-    <button onclick="window.location.href='config.html'" class="btn-go">📋 Cấu Hình </button>
-	<button onclick="window.location.href='list.html'" class="btn-go">✏️ Danh Sách Hàng Mẫu</button>
+    <button onclick="window.location.href='config.html'" class="btn-go">✏️ Cấu Hình </button>
+	<button onclick="window.location.href='danhsach.html'" class="btn-go">📋 Danh Sách Hàng Mẫu</button>
     <button onclick="window.location.href='editProducts.html'" class="btn-go">✏️ Chỉnh sửa sản phẩm</button>
 	</div>
+	
 
   <h2>📤 Upload sản phẩm lên Dropbox</h2>
 
+	<hr />
+	<h3>🔐 Cấu hình truy cập Dropbox</h3>
+	<label>Nhập Dropbox Access Token:</label>
+	<input type="password" id="tokenInput" placeholder="YOUR_DROPBOX_ACCESS_TOKEN" />
+
+	<button onclick="saveToken()">💾 Lưu token</button>
+	<button onclick="clearToken()">❌ Xóa token</button>
+
+	<div id="tokenStatus" style="margin-top: 10px; font-style: italic;"></div>
+
+	
   <label>Tên sản phẩm:</label>
   <input type="text" id="name" placeholder="Ví dụ: Khay bộ" required />
 
@@ -99,7 +111,7 @@
   <div id="status"></div>
 
   <!-- Import script -->
-  <script src="key.js"></script>
+  <script src="token.js"></script>
   <script src="imageUtils.js"></script>
   <script src="main.js"></script>
 
