@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📋 Danh sách sản phẩm</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .top-bar input, .top-bar select {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .btn-back {
+      background: #0078d7;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    h2 {
+      text-align: center;
+      color: #0078d7;
+      margin-bottom: 20px;
+    }
+
+    .product {
+      background: white;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+
+    .product img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .info div {
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    @media (max-width: 600px) {
+      .top-bar input, .top-bar select { font-size: 18px; }
+      h2 { font-size: 20px; }
+      .info div { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="btn-back" onclick="window.location.href='index.html'">↩️ Quay về trang chính</button>
+  <h2>📦 Danh sách sản phẩm</h2>
+
+  <div class="top-bar">
+    <select id="brandFilter">
+      <option value="">-- Tất cả hãng --</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="🔍 Tìm sản phẩm..." />
+    <select id="searchType">
+      <option value="all">Tên & Mã số</option>
+      <option value="name">Chỉ tên</option>
+      <option value="code">Chỉ mã số</option>
+    </select>
+  </div>
+
+  <div id="productList">⏳ Đang tải dữ liệu...</div>
+
+  <script>
+    let allProducts = [];
+
+    const accessToken = localStorage.getItem("dropbox_token");
+    if (!accessToken) {
+      alert("🚫 Bạn chưa đăng nhập token! Quay về trang chính...");
+      window.location.href = "index.html";
+    }
+
+    async function fetchProducts() {
+      try {
+        const res = await fetch("https://content.dropboxapi.com/2/files/download", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + accessToken,
+            "Dropbox-API-Arg": JSON.stringify({ path: "/hangmau/products.json" })
+          }
+        });
+
+        if (!res.ok) throw new Error("Không thể tải danh sách sản phẩm.");
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("Dữ liệu không hợp lệ.");
+
+        allProducts = data;
+        renderFilters(data);
+        renderList();
+      } catch (err) {
+        document.getElementById("productList").innerHTML = `❌ ${err.message}`;
+      }
+    }
+
+    function renderFilters(products) {
+      const brandSet = new Set(products.map(p => p.brand).filter(Boolean));
+      const brandSelect = document.getElementById("brandFilter");
+      brandSet.forEach(brand => {
+        const option = document.createElement("option");
+        option.value = brand;
+        option.textContent = brand;
+        brandSelect.appendChild(option);
+      });
+    }
+
+    function renderList() {
+      const list = document.getElementById("productList");
+      const searchValue = document.getElementById("searchInput").value.trim().toLowerCase();
+      const selectedBrand = document.getElementById("brandFilter").value;
+      const searchType = document.getElementById("searchType").value;
+
+      const filtered = allProducts.filter(p => {
+	  const matchName = p.name?.toLowerCase().includes(searchValue);
+      const matchCode = p.code?.toLowerCase().includes(searchValue);
+      const brandMatch = selectedBrand ? p.brand === selectedBrand : true;
+
+      let typeMatch = true;
+      if (searchType === "name") typeMatch = matchName;
+      else if (searchType === "code") typeMatch = matchCode;
+      else typeMatch = matchName || matchCode;
+
+      return brandMatch && typeMatch;
+});
+
+   list.innerHTML = filtered.length === 0
+      ? "<p>🙈 Không có sản phẩm phù hợp.</p>"
+      : filtered.map(p => {
+      const timeStr = new Date(p.time).toLocaleString("vi-VN");
+      const imgURL = p.image.startsWith("http")
+      ? p.image
+      : "https://dl.dropboxusercontent.com" + p.image;
+
+    return `
+      <div class="product">
+        <img src="${imgURL}" alt="${p.name}" />
+        <div class="info">
+          <div><span class="label">Tên:</span> ${p.name}</div>
+          <div><span class="label">Mã số:</span> ${p.code}</div>
+          <div><span class="label">Hãng:</span> ${p.brand}</div>
+          <div><span class="label">Quy cách:</span> ${p.specs}</div>
+          <div><span class="label">Loại gỗ:</span> ${p.woodType}</div>
+          <div><span class="label">Khác:</span> ${p.extra}</div>
+          <div><span class="label">Mô tả:</span> ${p.description || "—"}</div>
+          <div><span class="label">Thời gian:</span> ${timeStr}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderList);
+    document.getElementById("brandFilter").addEventListener("change", renderList);
+    document.getElementById("searchType").addEventListener("change", renderList);
+
+    window.addEventListener("DOMContentLoaded", fetchProducts);
+  </script>
+
+</body>
+</html>
