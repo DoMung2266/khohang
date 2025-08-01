@@ -3,52 +3,131 @@
 <head>
   <meta charset="UTF-8">
   <title>Quản lý hãng sản phẩm</title>
-  <script src="key.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Giữ nguyên style ban đầu */
-    body { font-family: 'Segoe UI', sans-serif; background: #f2f6fc; margin: 0; padding: 0; }
-    .container { max-width: 700px; margin: 50px auto; background: #fff; padding: 30px; border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #0078D7; margin-bottom: 20px; }
-    .input-group { display: flex; margin-bottom: 15px; }
-    .input-group input { flex: 1; padding: 10px; font-size: 16px; border: 1px solid #ccc;
-      border-radius: 4px 0 0 4px; }
-    .input-group button { padding: 10px 16px; font-size: 16px; background: #0078D7; color: white;
-      border: none; border-radius: 0 4px 4px 0; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-    td input { width: 100%; padding: 8px; border: 1px solid #ccc; }
-    .btn-remove { background: #d9534f; color: white; border: none; padding: 6px 10px;
-      border-radius: 4px; cursor: pointer; }
-    .save-btn { margin-top: 15px; background: #28a745; color: white; padding: 10px 16px;
-      border: none; border-radius: 4px; cursor: pointer; }
-    .status { text-align: center; margin-top: 15px; font-style: italic; color: gray; }
-	.btn-back {
-    display: inline-block;
-    margin: 20px auto 0 auto;
-    padding: 10px 18px;
-    background-color: #f39c12;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 16px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    transition: background 0.3s ease;
-    text-align: center;
-  }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f2f6fc;
+    }
 
-  .btn-back:hover {
-    background-color: #e67e22;
-  }
+    .wrapper {
+      max-width: 800px;
+      margin: auto;
+    }
 
+    h2 {
+      text-align: center;
+      color: #0078D7;
+      margin-bottom: 20px;
+    }
+
+    .btn-back {
+      display: block;
+      margin-bottom: 20px;
+      background-color: #f39c12;
+      color: white;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: background 0.3s ease;
+    }
+
+    .btn-back:hover {
+      background-color: #e67e22;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      min-width: 200px;
+    }
+
+    .input-group button {
+      padding: 10px 16px;
+      font-size: 16px;
+      background: #0078D7;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    td input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .btn-remove {
+      background: #d9534f;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      margin-top: 15px;
+      background: #28a745;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 15px;
+      font-style: italic;
+      color: gray;
+    }
+
+    @media (max-width: 600px) {
+      h2 { font-size: 20px; }
+      .input-group button, .save-btn { width: 100%; }
+      .input-group { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
-  <a href="index.html" class="btn-back">↩️📦 Thêm sản phẩm mới</a>
+  <div class="wrapper">
+    <a href="index.html" class="btn-back">↩️📦 Thêm sản phẩm mới</a>
     <h2>🌟 Quản lý hãng sản phẩm</h2>
+
+    <div class="status" id="tokenStatus"></div>
 
     <div class="input-group">
       <input type="text" id="brandInput" placeholder="Thêm hãng mới (VD: ASAHI)" />
@@ -65,11 +144,20 @@
   </div>
 
   <script>
+    const token = localStorage.getItem("dropbox_token");
+    if (!token) {
+      alert("🚫 Bạn chưa đăng nhập token! Đang quay về trang chính...");
+      window.location.href = "index.html";
+    } else {
+      window.DROPBOX_ACCESS_TOKEN = token;
+      document.getElementById("tokenStatus").innerText = "🔐 Token đã được nạp!";
+    }
+
     let brands = [];
 
     function renderBrands() {
-      const tbody = document.getElementById('brandTableBody');
-      tbody.innerHTML = '';
+      const tbody = document.getElementById("brandTableBody");
+      tbody.innerHTML = "";
       brands.forEach((brand, index) => {
         tbody.innerHTML += `
           <tr>
@@ -81,11 +169,11 @@
     }
 
     function addBrand() {
-      const input = document.getElementById('brandInput');
+      const input = document.getElementById("brandInput");
       const name = input.value.trim();
       if (name && !brands.includes(name)) {
         brands.push(name);
-        input.value = '';
+        input.value = "";
         renderBrands();
       }
     }
@@ -101,18 +189,15 @@
     }
 
     async function saveBrandsToDropbox() {
-      const statusText = document.getElementById('statusText');
+      const statusText = document.getElementById("statusText");
       statusText.innerText = "🔄 Đang lưu danh sách hãng lên Dropbox...";
       try {
         const res = await fetch("https://content.dropboxapi.com/2/files/upload", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+            "Authorization": `Bearer ${window.DROPBOX_ACCESS_TOKEN}`,
             "Dropbox-API-Arg": JSON.stringify({
-              path: "/hangmau/config.json",
-              mode: "overwrite",
-              autorename: false,
-              mute: false
+              path: "/hangmau/config.json", mode: "overwrite", autorename: false
             }),
             "Content-Type": "application/octet-stream"
           },
@@ -127,12 +212,12 @@
     }
 
     async function loadBrandsFromDropbox() {
-      const statusText = document.getElementById('statusText');
+      const statusText = document.getElementById("statusText");
       try {
         const res = await fetch("https://content.dropboxapi.com/2/files/download", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+            "Authorization": `Bearer ${window.DROPBOX_ACCESS_TOKEN}`,
             "Dropbox-API-Arg": JSON.stringify({ path: "/hangmau/config.json" })
           }
         });
@@ -147,9 +232,9 @@
             statusText.innerText = "⚠️ Dữ liệu không hợp lệ trong config.json.";
           }
         } else if (res.status === 409) {
-          statusText.innerText = "ℹ️ Chưa có file config.json trên Dropbox. Hãy nhấn 💾 để lưu!";
+          statusText.innerText = "ℹ️ Chưa có file config.json. Nhấn 💾 để tạo!";
         } else {
-          statusText.innerText = `❌ Lỗi khi kiểm tra: ${res.status}`;
+          statusText.innerText = `❌ Lỗi khi tải: ${res.status}`;
         }
       } catch (err) {
         statusText.innerText = `⚠️ Lỗi khi tải hãng: ${err.message}`;
